@@ -4,7 +4,7 @@
 
     <h3>{{ question.questionText }}</h3>
     <div v-if="question?.multiAnswer" class="form-groups">
-      <template v-for="option in question.answers">
+      <template v-for="option in question.options">
         <label>
           <input
               type="checkbox"
@@ -24,7 +24,7 @@
       </template>
     </div>
     <div v-else class="form-groups">
-      <template v-for="option in question.answers">
+      <template v-for="option in question.options">
         <label>
           <input
               type="radio"
@@ -67,9 +67,6 @@
       </div>
       <button @click="onSkip">Skip</button>
     </div>
-
-    <br />
-    <div>{{ saving ? 'Saving...' : '&nbsp;' }}</div>
   </div>
 </template>
 

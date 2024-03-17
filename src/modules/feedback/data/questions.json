@@ -1,0 +1,72 @@
+[
+  {
+    "id": "111",
+    "questionText": "How did you hear us?",
+    "options": [
+      {
+        "position": 1,
+        "answerText": "Facebook"
+      },
+      {
+        "position": 2,
+        "answerText": "Social Media"
+      },
+      {
+        "position": 3,
+        "answerText": "Tiktok"
+      },
+      {
+        "position": 4,
+        "answerText": "Others",
+        "acceptFreeFormText": true
+      }
+    ]
+  },
+  {
+    "id": "222",
+    "multiAnswer": true,
+    "questionText": "How old are you?",
+    "options": [
+      {
+        "position": 1,
+        "answerText": "0-10"
+      },
+      {
+        "position": 2,
+        "answerText": "10-20"
+      },
+      {
+        "position": 3,
+        "answerText": "20-30"
+      },
+      {
+        "position": 4,
+        "answerText": "Others",
+        "acceptFreeFormText": true
+      }
+    ]
+  },
+  {
+    "id": "333",
+    "questionText": "What are you looking for?",
+    "options": [
+      {
+        "position": 1,
+        "answerText": "Service"
+      },
+      {
+        "position": 2,
+        "answerText": "Assistance"
+      },
+      {
+        "position": 3,
+        "answerText": "Issues"
+      },
+      {
+        "position": 4,
+        "answerText": "Others",
+        "acceptFreeFormText": true
+      }
+    ]
+  }
+]

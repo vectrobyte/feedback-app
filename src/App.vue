@@ -1,8 +1,8 @@
 <script setup>
-import FeedbackComponent from './components/FeedbackComponent.vue'
+import Feedback from './modules/feedback/Feedback.vue';
 </script>
 
 <template>
-  <FeedbackComponent />
+  <Feedback />
 </template>
 

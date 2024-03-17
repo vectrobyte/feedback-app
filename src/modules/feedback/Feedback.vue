@@ -1,15 +1,15 @@
 <template>
   <div class="container">
-    <div class="loading" v-if="loading">
+    <div class="loading" v-if="store.loading">
       <h2>Loading...</h2>
     </div>
     <div v-else class="question-wrapper">
-      <template v-for="(question, key) of questions" :key="question.id">
+      <template v-for="(question, key) of store.questions" :key="question.id">
         <Question
           v-if="key === index"
           :question="question"
           :isFirst="!index"
-          :isLast="index === questions.length - 1"
+          :isLast="index === store.questions.length - 1"
           :answer="answer"
           :saving="saving"
           @back="handleBack"
@@ -19,10 +19,13 @@
         />
       </template>
 
-      <template v-if="completed">
+      <br />
+      <div>{{ saving ? 'Saving...' : '&nbsp;' }}</div>
+
+      <template v-if="index === store.questions.length">
         <br />
         <p>Submitted Answers:</p>
-        <pre>{{ JSON.stringify(responses, null, 2) }}</pre>
+        <pre v-if="!saving">{{ JSON.stringify(store.responses, null, 2) }}</pre>
       </template>
     </div>
   </div>
@@ -30,24 +33,20 @@
 
 <script setup>
 import {computed, onMounted, ref} from 'vue';
-import { storeToRefs } from 'pinia';
-import { useFeedbackStore } from '../stores/feedbackStore.js';
-import Question from './Question.vue';
+import { useFeedbackStore } from './store';
+import Question from './components/Question.vue';
 
 const store = useFeedbackStore();
 
 let index = ref(0);
 let saving = ref(false);
-let completed = ref(false);
-
-const { questions, loading, responses } = storeToRefs(store);
 
 onMounted(async () => {
   await store.fetchQuestions();
   index.value = 0;
 });
 
-const answer = computed(() => responses.value[index.value] || {});
+const answer = computed(() => store.responses[index.value] || {});
 
 const handleBack = () => {
   index.value--;
@@ -56,18 +55,17 @@ const handleSkip = () => {
   index.value++;
 }
 
-const handleNext = ({ values, optionalText }) => {
+const handleNext = async ({ values, optionalText }) => {
   store.saveAnswer(index.value, values, optionalText);
   index.value++;
 }
 
 const handleFinish = async ({ values, optionalText }) => {
-  store.saveAnswer(index.value, values, optionalText);
+  await handleNext({ values, optionalText });
 
   saving.value = true;
   setTimeout(() => {
     saving.value = false;
-    completed.value = true;
   }, 1000)
 };
 </script>
@@ -94,6 +92,7 @@ const handleFinish = async ({ values, optionalText }) => {
 .container .question-wrapper {
   width: 50%;
   height: 60vh;
+  overflow-y: auto;
   background: #ffffff;
   color: black;
   padding: 4rem;
