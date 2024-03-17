@@ -17,13 +17,13 @@ const QUESTIONS = [
             {
                 position: 3,
                 answerText: "Tiktok"
-            },             
+            },
             {
                 position: 4,
                 answerText: "Others",
                 acceptFreeFormText: true
             }
-        ]
+        ],
     },
     {
         id: "222",
@@ -41,7 +41,7 @@ const QUESTIONS = [
             {
                 position: 3,
                 answerText: "20-30"
-            },             
+            },
             {
                 position: 4,
                 answerText: "Others",
@@ -64,7 +64,7 @@ const QUESTIONS = [
             {
                 position: 3,
                 answerText: "Issues"
-            },             
+            },
             {
                 position: 4,
                 answerText: "Others",
@@ -72,74 +72,44 @@ const QUESTIONS = [
             }
         ]
     }
-]
+];
 
 export const useFeedbackStore = defineStore('feedback', () => {
-    let loading = ref(false)
-    let errorMessage = ref(null)
-    let questionList = ref([])
+    let loading = ref(false);
+    let questions = ref([]);
+    let responses = ref([]);
 
-    let activeQuestionIndex = ref(null)
-
-    let responses = ref({})
-
-    const handlePrevious = () => {
-        activeQuestionIndex.value--
-    }
-    const handleSkip = () => {
-        activeQuestionIndex.value++
-    }
-    const saveAnswer = (userResponses, additionalAnswer) => {
-        const currentQuestion = questionList.value[activeQuestionIndex.value]
-        responses.value[currentQuestion.id] = {
+    const saveAnswer = (index, userResponses, additionalAnswer) => {
+        const currentQuestion = questions.value[index]
+        responses.value[index] = {
             questionId: currentQuestion.id,
             questionText: currentQuestion.questionText,
-            userResponses: userResponses.map(res => res.value),
-            additionalAnswer: additionalAnswer.value
+            userResponses: userResponses,
+            additionalAnswer: additionalAnswer,
         }
-    }
+    };
 
     const getAnswer = (questionId) => {
         return responses.value[questionId]
-    }
-
-    const handleNext = (userResponses, additionalAnswer) => {
-        saveAnswer(userResponses, additionalAnswer)
-        activeQuestionIndex.value++
-    }
-
-    const handleFinish = (userResponses, additionalAnswer) => {
-        saveAnswer(userResponses, additionalAnswer)
-        console.log(responses.value)
-    }
+    };
 
     const fetchQuestions = async () => {
         loading.value = true;
-        try {            
+        return new Promise(resolve => {
             setTimeout(() => {
-                questionList.value = QUESTIONS
-                activeQuestionIndex.value = 0
+                questions.value = QUESTIONS
+                loading.value = false;
+                resolve();
             }, 1000)
-        } catch (error) {
-            errorMessage = "Something went wrong. Please try again."
-        } finally {
-            loading.value = false;
-        }
-    }
+        })
+    };
 
     return {
-        questionList,
-        activeQuestionIndex,
         loading,
+        questions,
         responses,
         getAnswer,
-
-        handlePrevious,
-        handleNext,
-        handleSkip,
-
+        saveAnswer,
         fetchQuestions,
-        handleFinish
-
-    }
+    };
 })

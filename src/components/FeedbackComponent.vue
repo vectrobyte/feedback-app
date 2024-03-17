@@ -1,169 +1,101 @@
 <template>
-  <div id="wrapper">
-    <div class="loading" v-if="loading"><h2>Loading...</h2></div>
-    <div id="form" v-if="!loading && activeQuestion">
-      <h3>{{ activeQuestion?.questionText }}</h3>
-      <div id="answers">
-        <div
-          v-if="activeQuestion.multiAnswer"
-          v-for="answer in activeQuestion?.answers"
-          class="form-groups"
-        >
-          <div>
-            <input
-              type="checkbox"
-              v-model="checkedAnswers"
-              :value="answer.answerText"
-            />
-            {{ answer.answerText }}
-          </div>
-          <input
-            v-if="
-              answer.acceptFreeFormText &&
-              checkedAnswers.includes(answer.answerText)
-            "
-            type="text"
-            v-model="additionalAnswer"
-          />
-        </div>
-        <div
-          v-if="!activeQuestion.multiAnswer"
-          v-for="answer in activeQuestion?.answers"
-          class="form-groups"
-        >
-          <div>
-            <input
-              type="radio"
-              :name="activeQuestion.id"
-              v-model="radioAnswer"
-              :value="answer.answerText"
-            />
-            {{ answer.answerText }}
-          </div>
-          <input
-            v-if="answer.acceptFreeFormText && radioAnswer == answer.answerText"
-            type="text"
-            v-model="additionalAnswer"
-          />
-        </div>
+  <div class="container">
+    <div class="loading" v-if="loading">
+      <h2>Loading...</h2>
+    </div>
+    <div v-else class="question-wrapper">
+      <template v-for="(question, key) of questions" :key="question.id">
+        <Question
+          v-if="key === index"
+          :question="question"
+          :isFirst="!index"
+          :isLast="index === questions.length - 1"
+          :answer="answer"
+          :saving="saving"
+          @back="handleBack"
+          @next="handleNext"
+          @skip="handleSkip"
+          @finish="handleFinish"
+        />
+      </template>
 
-        <div>Selected Checkboxes: {{ checkedAnswers }}</div>
-        <div>Selected Radio: {{ radioAnswer }}</div>
-      </div>
-      <div class="button-groups">
-        <div>
-          <button
-            @click="handleButtonAction('PREVIOUS')"
-            v-if="activeQuestionIndex !== 0"
-          >
-            Previous
-          </button>
-          <button
-            v-if="activeQuestionIndex < questionList.length - 1"
-            @click="handleButtonAction('NEXT')"
-          >
-            Next
-          </button>
-          <button
-            v-if="activeQuestionIndex == questionList.length - 1"
-            @click="handleButtonAction('FINISH')"
-          >
-            Finish
-          </button>
-        </div>
-        <button @click="handleButtonAction('SKIP')">Skip</button>
-      </div>
+      <template v-if="completed">
+        <br />
+        <p>Submitted Answers:</p>
+        <pre>{{ JSON.stringify(responses, null, 2) }}</pre>
+      </template>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from "vue";
-import { storeToRefs } from "pinia";
-import { useFeedbackStore } from "../stores/feedbackStore.js";
-
-let additionalAnswer = ref("");
-let checkedAnswers = ref([]);
-let radioAnswer = ref("");
+import {computed, onMounted, ref} from 'vue';
+import { storeToRefs } from 'pinia';
+import { useFeedbackStore } from '../stores/feedbackStore.js';
+import Question from './Question.vue';
 
 const store = useFeedbackStore();
 
-onMounted(() => {
-  store.fetchQuestions();
+let index = ref(0);
+let saving = ref(false);
+let completed = ref(false);
+
+const { questions, loading, responses } = storeToRefs(store);
+
+onMounted(async () => {
+  await store.fetchQuestions();
+  index.value = 0;
 });
 
-const { activeQuestionIndex, questionList } = storeToRefs(store);
+const answer = computed(() => responses.value[index.value] || {});
 
-const { handleNext, handleSkip, handlePrevious, loading, handleFinish } = store;
+const handleBack = () => {
+  index.value--;
+}
+const handleSkip = () => {
+  index.value++;
+}
 
-const activeQuestion = computed(
-  () => questionList.value[activeQuestionIndex.value]
-);
+const handleNext = ({ values, optionalText }) => {
+  store.saveAnswer(index.value, values, optionalText);
+  index.value++;
+}
 
-const handleButtonAction = (action) => {
-  switch (action) {
-    case "PREVIOUS":
-      handlePrevious();
-      break;
-    case "SKIP":
-      handleSkip();
-      break;
-    case "NEXT":
-      if (activeQuestion.multiAnswer) {
-        handleNext([radioAnswer], additionalAnswer);
-      } else {
-        handleNext([checkedAnswers], additionalAnswer);
-      }
-      break;
-    case "FINISH":
-      if (activeQuestion.multiAnswer) {
-        handleFinish([radioAnswer], additionalAnswer);
-      } else {
-        handleFinish([checkedAnswers], additionalAnswer);
-      }
-  }
+const handleFinish = async ({ values, optionalText }) => {
+  store.saveAnswer(index.value, values, optionalText);
+
+  saving.value = true;
+  setTimeout(() => {
+    saving.value = false;
+    completed.value = true;
+  }, 1000)
 };
 </script>
 
 <style scoped>
-#wrapper {
+.container {
   width: 100%;
   height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   background: gray;
 }
 
-#form,
-.loading {
-  width: 50%;
-  height: 60vh;
-  background: #ffffff;
-  color: black;
-  padding: 16px;
-}
-
-.button-groups {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 40px;
-}
-
-.button-groups button {
-  margin-right: 16px;
-}
-
-.button-groups div {
-  display: flex;
-  justify-content: space-between;
-}
-.loading {
+.container .loading {
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.container .question-wrapper {
+  width: 50%;
+  height: 60vh;
+  background: #ffffff;
+  color: black;
+  padding: 4rem;
 }
 </style>
